@@ -1,2 +1,3 @@
-# SMRPG_apworld
-Poor attempt at correcting some of Rosalies work :D don't cancel me
+## Installation
+
+Grab latest apworld, and then place into **custom_worlds** of your AP install and generate using the yaml provided (or gen your own with AP Launcher)
