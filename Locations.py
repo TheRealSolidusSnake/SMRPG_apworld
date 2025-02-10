@@ -340,6 +340,7 @@ for location in star_piece_locations:
 star_piece_locations.remove(location_to_remove)
 
 additional_bambino_locks: List[str] = [
+    "Event - Treasure Seller 1", "Event - Treasure Seller 2", "Event - Treasure Seller 3",
     "Key Item - Melody Bay Song 2", "Key Item - Melody Bay Song 3", "Boss - Culex Spot", "Event - Culex Reward"
 ]
 
