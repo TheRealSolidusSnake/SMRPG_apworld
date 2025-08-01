@@ -1,5 +1,7 @@
+from dataclasses import dataclass
+
 import typing
-from Options import Option, DefaultOnToggle, Choice, Range, Toggle
+from Options import Option, DefaultOnToggle, Choice, Range, Toggle, PerGameCommonOptions
 
 
 class StarPieceGoal(Choice):
@@ -166,29 +168,27 @@ class FreeShops(Toggle):
     """
     display_name = "Free Shops"
 
+@dataclass
+class SMRPGOptions(PerGameCommonOptions):
+    star_piece_goal: StarPieceGoal
+    star_pieces_in_bowsers_keep: StarPiecesInBowsersKeep
+    bowsers_keep_doors: BowsersKeepDoors
+    shuffle_bowsers_keep_doors: ShuffleBowsersKeepDoors
+    include_culex: IncludeCulex
+    experience_multiplier: ExperienceMultiplier
+    randomize_enemies: RandomizeEnemies
+    randomize_bosses: RandomizeBosses
+    randomize_character_stats: RandomizeCharacterStats
+    randomize_character_spells: RandomizeCharacterSpells
+    starting_character_count: StartingCharacterCount
+    starting_character: StartingCharacter
+    randomize_character_palettes: RandomizeCharacterPalettes
+    randomize_equipment: RandomizeEquipment
+    itempool: ItemPool
+    super_jumps_in_logic: SuperJumpsInLogic
+    freeshops: FreeShops
 
-smrpg_options: typing.Dict[str, type(Option)] = {
-    "StarPieceGoal": StarPieceGoal,
-    "StarPiecesInBowsersKeep": StarPiecesInBowsersKeep,
-    "BowsersKeepDoors": BowsersKeepDoors,
-    "ShuffleBowsersKeepDoors": ShuffleBowsersKeepDoors,
-    "IncludeCulex": IncludeCulex,
-    "ExperienceMultiplier": ExperienceMultiplier,
-    "RandomizeEnemies": RandomizeEnemies,
-    "RandomizeBosses": RandomizeBosses,
-    "RandomizeCharacterStats": RandomizeCharacterStats,
-    "RandomizeCharacterSpells": RandomizeCharacterSpells,
-    "StartingCharacterCount": StartingCharacterCount,
-    "StartingCharacter": StartingCharacter,
-    "RandomizeCharacterPalettes": RandomizeCharacterPalettes,
-    "RandomizeEquipment": RandomizeEquipment,
-    "ItemPool": ItemPool,
-    "SuperJumpsInLogic": SuperJumpsInLogic,
-    "FreeShops": FreeShops
-}
-
-
-def build_flag_string(options: typing.Dict[str, typing.Any]):
+def build_flag_string(options):
     key_flags = build_key_flags(options)
     character_flags = build_character_flags(options)
     treasure_flags = "Tca" # Special Archipelago flag
@@ -201,20 +201,20 @@ def build_flag_string(options: typing.Dict[str, typing.Any]):
     return f"{key_flags} {character_flags} {treasure_flags} {shop_flags}" \
            f" {battle_flags} {enemy_flags} {equipment_flags} {challenge_flags} {tweaks_flags}"
 
-
-def build_key_flags(options: typing.Dict[str, typing.Any]):
+def build_key_flags(options: typing.Dict[str, typing.Any]) -> str:
     key_flags = "Ksb R"
-    if options["StarPieceGoal"] == StarPieceGoal.option_seven:
+
+    if options["star_piece_goal"] == StarPieceGoal.option_seven:
         key_flags += "7"
-    if options["StarPiecesInBowsersKeep"] == StarPiecesInBowsersKeep.option_true:
+    if options["star_pieces_in_bowsers_keep"] == StarPiecesInBowsersKeep.option_true:
         key_flags += "k"
-    if options["IncludeCulex"] == IncludeCulex.option_true:
+    if options["include_culex"] == IncludeCulex.option_true:
         key_flags += "c"
     return key_flags
 
-
-def build_character_flags(options: typing.Dict[str, typing.Any]):
+def build_character_flags(options: typing.Dict[str, typing.Any]) -> str:
     character_flags = "Cj"
+
     starting_character_lookup = {
         0: "Ym",
         1: "Yw",
@@ -222,72 +222,68 @@ def build_character_flags(options: typing.Dict[str, typing.Any]):
         3: "Yb",
         4: "Yt",
     }
-    if options["RandomizeCharacterStats"] == RandomizeCharacterStats.option_true:
+
+    if options["randomize_character_stats"] == RandomizeCharacterStats.option_true:
         character_flags += "s"
-    if options["RandomizeCharacterSpells"] == RandomizeCharacterSpells.option_true:
+    if options["randomize_character_spells"] == RandomizeCharacterSpells.option_true:
         character_flags += "pl"
-    if options["StartingCharacterCount"] == StartingCharacterCount.option_one:
+    if options["starting_character_count"] == StartingCharacterCount.option_one:
         character_flags += " -nfc"
-    if options["StartingCharacter"] in starting_character_lookup.keys():
-        character_flags += f" {starting_character_lookup[options['StartingCharacter']]}"
-    if options["RandomizeCharacterPalettes"] == RandomizeCharacterPalettes.option_true:
+    if options["starting_character"] in starting_character_lookup:
+        character_flags += f" {starting_character_lookup[options['starting_character']]}"
+    if options["randomize_character_palettes"] == RandomizeCharacterPalettes.option_true:
         character_flags += " -palette"
     return character_flags
 
-
-def build_shop_flags(options: typing.Dict[str, typing.Any]):
+def build_shop_flags(options: typing.Dict[str, typing.Any]) -> str:
     shop_flags = "Sc4"
-    if options["FreeShops"] == FreeShops.option_true:
+    if options["freeshops"] == FreeShops.option_true:
         shop_flags += " -freeshops"
     return shop_flags
 
-
-def build_battle_flags(options: typing.Dict[str, typing.Any]):
+def build_battle_flags(options: typing.Dict[str, typing.Any]) -> str:
     battle_flags = ""
-    if options["ExperienceMultiplier"] == ExperienceMultiplier.option_double:
+    if options["experience_multiplier"] == ExperienceMultiplier.option_double:
         battle_flags += "X2"
-    if options["ExperienceMultiplier"] == ExperienceMultiplier.option_triple:
+    elif options["experience_multiplier"] == ExperienceMultiplier.option_triple:
         battle_flags += "X3"
     return battle_flags
 
-
-def build_enemy_flags(options: typing.Dict[str, typing.Any]):
+def build_enemy_flags(options: typing.Dict[str, typing.Any]) -> str:
     enemy_flags = ""
-    if options["RandomizeEnemies"] == RandomizeEnemies.option_mild:
+
+    difficulty = options["randomize_enemies"]
+    if difficulty == RandomizeEnemies.option_mild:
         enemy_flags += " Edf"
-    if options["RandomizeEnemies"] == RandomizeEnemies.option_moderate:
+    elif difficulty == RandomizeEnemies.option_moderate:
         enemy_flags += " Edfsa"
-    if options["RandomizeEnemies"] == RandomizeEnemies.option_severe:
+    elif difficulty == RandomizeEnemies.option_severe:
         enemy_flags += " Edfsac"
-    if options["RandomizeEnemies"] == RandomizeEnemies.option_extreme:
+    elif difficulty == RandomizeEnemies.option_extreme:
         enemy_flags += " Edfsac!"
-    if options["RandomizeBosses"] == RandomizeBosses.option_true:
+
+    if options["randomize_bosses"] == RandomizeBosses.option_true:
         enemy_flags += " B"
-        if options["IncludeCulex"] == IncludeCulex.option_true:
+        if options["include_culex"] == IncludeCulex.option_true:
             enemy_flags += "c"
     return enemy_flags
 
-
-def build_equipment_flags(options: typing.Dict[str, typing.Any]):
-    """
-    Randomize equipment. Mild randomizes who can equip each piece of gear. Moderate randomizes stats and buffs. Severe
-    removes safety checks for the status protection pins guarding against their status and a minimum number of instant
-    KO protection items.
-    """
+def build_equipment_flags(options: typing.Dict[str, typing.Any]) -> str:
     equipment_flags = ""
-    if options["RandomizeEquipment"] == RandomizeEquipment.option_mild:
+    eq_setting = options["randomize_equipment"]
+
+    if eq_setting == RandomizeEquipment.option_mild:
         equipment_flags += "Qa"
-    if options["RandomizeEquipment"] == RandomizeEquipment.option_moderate:
+    elif eq_setting == RandomizeEquipment.option_moderate:
         equipment_flags += "Qsba"
-    if options["RandomizeEquipment"] == RandomizeEquipment.option_severe:
+    elif eq_setting == RandomizeEquipment.option_severe:
         equipment_flags += "Qsba!"
     return equipment_flags
 
-
-def build_tweaks_flags(options: typing.Dict[str, typing.Any]):
-    tweaks_flags= "W -showequips"
-    door_count = options["BowsersKeepDoors"]
+def build_tweaks_flags(options: typing.Dict[str, typing.Any]) -> str:
+    tweaks_flags = "W -showequips"
+    door_count = options["bowsers_keep_doors"]
     tweaks_flags += f" D{door_count}"
-    if options["ShuffleBowsersKeepDoors"] == ShuffleBowsersKeepDoors.option_true:
+    if options["shuffle_bowsers_keep_doors"] == ShuffleBowsersKeepDoors.option_true:
         tweaks_flags += "s"
     return tweaks_flags
