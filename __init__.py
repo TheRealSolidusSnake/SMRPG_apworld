@@ -17,7 +17,7 @@ from .Client import SMRPGClient
 from .Options import SMRPGOptions, build_flag_string
 from worlds.AutoWorld import World, WebWorld
 from worlds.generic.Rules import add_rule, add_item_rule
-from .Rom import SMRPGDeltaPatch
+from .Rom import get_base_rom_path, SMRPGDeltaPatch
 
 from .smrpg_web_randomizer.randomizer.management.commands import make_seed
 
@@ -89,6 +89,12 @@ class SMRPGWorld(World):
         return_location = SMRPGLocation(self.player, name, id, parent)
         return_location.event = event
         return return_location
+
+    @classmethod
+    def stage_assert_generate(cls, _: "MultiWorld") -> None:
+        rom_file = get_base_rom_path()
+        if not os.path.exists(rom_file):
+            raise FileNotFoundError(rom_file)
 
     def create_regions(self):
         menu = Region("Menu", self.player, self.multiworld)
